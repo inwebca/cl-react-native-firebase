@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { database } from "./firebaseConfig";
 import {
@@ -22,6 +23,8 @@ import { useEffect, useState } from "react";
 export default function App() {
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState<{ id: string; task: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const taskDocument = collection(database, "tasks");
 
   useEffect(() => {
@@ -31,6 +34,7 @@ export default function App() {
         task: doc.data().task,
       }));
       setTasks(loadedTasks);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -41,6 +45,7 @@ export default function App() {
       Alert.alert("Error", "Task is empty");
       return;
     }
+    setLoading(true);
     try {
       await addDoc(taskDocument, {
         task: task,
@@ -52,6 +57,7 @@ export default function App() {
   };
 
   const deleteTask = async (id: string) => {
+    setLoading(true);
     try {
       await deleteDoc(doc(database, "tasks", id));
     } catch (e) {
@@ -70,6 +76,7 @@ export default function App() {
           onChangeText={setTask}
         />
         <Button title="Add Task" onPress={addTask} />
+        {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
         <FlatList
           data={tasks}
